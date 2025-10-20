@@ -27,15 +27,32 @@ interface PaperResultsProps {
   papers: Paper[]
   selectedPapers: string[]
   onTogglePaper: (paperId: string) => void
+  onSelectAll?: () => void
+  onClearAll?: () => void
+  synthesize?: () => void
 }
 
-export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperResultsProps) {
+export function PaperResults({
+  papers,
+  selectedPapers,
+  onTogglePaper,
+  onSelectAll,
+  onClearAll,
+  synthesize,
+}: PaperResultsProps) {
   const [pdfModalOpen, setPdfModalOpen] = useState(false)
-  const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string } | null>(null)
+  const [selectedPdf, setSelectedPdf] = useState<{
+    url: string
+    title: string
+  } | null>(null)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
   }
 
   const handleViewPdf = (pdfUrl: string, title: string) => {
@@ -47,17 +64,47 @@ export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperRes
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Search Results</h2>
-          <span className="text-sm text-muted-foreground">
-            {papers.length} paper{papers.length !== 1 ? "s" : ""} found
-          </span>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold">Search Results</h2>
+            <span className="text-sm text-muted-foreground">
+              {papers.length} paper{papers.length !== 1 ? "s" : ""} found
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {onSelectAll && (
+              <Button variant="outline" size="sm" onClick={onSelectAll}>
+                Select all
+              </Button>
+            )}
+
+            {synthesize && (
+              <Button variant="secondary" size="sm" onClick={synthesize}>
+                Synthesize Selected
+              </Button>
+            )}
+
+            {onClearAll && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearAll}
+                disabled={selectedPapers.length === 0}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">
-          {papers.map((paper) => (
+          {papers.map(paper => (
             <Card
               key={paper.id}
-              className={`p-4 transition-colors ${selectedPapers.includes(paper.id) ? "border-primary bg-accent/5" : ""}`}
+              className={`p-4 transition-colors ${
+                selectedPapers.includes(paper.id)
+                  ? "border-primary bg-accent/5"
+                  : ""
+              }`}
             >
               <div className="flex gap-4">
                 <div className="pt-1">
@@ -69,12 +116,16 @@ export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperRes
 
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-semibold text-lg leading-tight text-balance">{paper.title}</h3>
+                    <h3 className="font-semibold text-lg leading-tight text-balance">
+                      {paper.title}
+                    </h3>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleViewPdf(paper.pdfLink, paper.title)}
+                        onClick={() =>
+                          handleViewPdf(paper.pdfLink, paper.title)
+                        }
                         className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         title="View PDF"
                       >
@@ -95,7 +146,7 @@ export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperRes
                   <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                     <div className="flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      <span>{paper.authors.map((a) => a.name).join(", ")}</span>
+                      <span>{paper.authors.map(a => a.name).join(", ")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -103,10 +154,12 @@ export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperRes
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{paper.summary}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                    {paper.summary}
+                  </p>
 
                   <div className="flex gap-2 flex-wrap">
-                    {paper.categories.map((category) => (
+                    {paper.categories.map(category => (
                       <Badge key={category} variant="secondary">
                         {category}
                       </Badge>
@@ -122,7 +175,8 @@ export function PaperResults({ papers, selectedPapers, onTogglePaper }: PaperRes
                       )}
                       {paper.journalRef && (
                         <div>
-                          <span className="font-medium">Published in:</span> {paper.journalRef}
+                          <span className="font-medium">Published in:</span>{" "}
+                          {paper.journalRef}
                         </div>
                       )}
                     </div>

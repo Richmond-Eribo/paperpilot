@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Search, Sparkles } from "lucide-react"
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card"
 import { PaperResults } from "@/components/paper-results"
 import { SynthesisView } from "@/components/synthesis-view"
 import { DemoScenarios } from "@/components/demo-scenarios"
+import { useRouter } from "next/navigation"
+import { useQueryState, parseAsArrayOf, parseAsString } from "nuqs"
 
 interface ArxivPaper {
   id: string
@@ -36,17 +38,24 @@ function parseArxivXML(xmlText: string): ArxivPaper[] {
 
     // Extract basic info
     const id = entry.getElementsByTagName("id")[0]?.textContent || ""
-    const title = entry.getElementsByTagName("title")[0]?.textContent?.trim() || ""
-    const summary = entry.getElementsByTagName("summary")[0]?.textContent?.trim() || ""
-    const published = entry.getElementsByTagName("published")[0]?.textContent || ""
+    const title =
+      entry.getElementsByTagName("title")[0]?.textContent?.trim() || ""
+    const summary =
+      entry.getElementsByTagName("summary")[0]?.textContent?.trim() || ""
+    const published =
+      entry.getElementsByTagName("published")[0]?.textContent || ""
     const updated = entry.getElementsByTagName("updated")[0]?.textContent || ""
 
     // Extract authors
     const authorElements = entry.getElementsByTagName("author")
     const authors: Array<{ name: string; affiliation?: string }> = []
     for (let j = 0; j < authorElements.length; j++) {
-      const name = authorElements[j].getElementsByTagName("name")[0]?.textContent || ""
-      const affiliationEl = authorElements[j].getElementsByTagNameNS("http://arxiv.org/schemas/atom", "affiliation")[0]
+      const name =
+        authorElements[j].getElementsByTagName("name")[0]?.textContent || ""
+      const affiliationEl = authorElements[j].getElementsByTagNameNS(
+        "http://arxiv.org/schemas/atom",
+        "affiliation"
+      )[0]
       const affiliation = affiliationEl?.textContent || undefined
       authors.push({ name, affiliation })
     }
@@ -74,13 +83,22 @@ function parseArxivXML(xmlText: string): ArxivPaper[] {
     }
 
     // Extract optional fields
-    const doiEl = entry.getElementsByTagNameNS("http://arxiv.org/schemas/atom", "doi")[0]
+    const doiEl = entry.getElementsByTagNameNS(
+      "http://arxiv.org/schemas/atom",
+      "doi"
+    )[0]
     const doi = doiEl?.textContent || undefined
 
-    const journalRefEl = entry.getElementsByTagNameNS("http://arxiv.org/schemas/atom", "journal_ref")[0]
+    const journalRefEl = entry.getElementsByTagNameNS(
+      "http://arxiv.org/schemas/atom",
+      "journal_ref"
+    )[0]
     const journalRef = journalRefEl?.textContent || undefined
 
-    const commentEl = entry.getElementsByTagNameNS("http://arxiv.org/schemas/atom", "comment")[0]
+    const commentEl = entry.getElementsByTagNameNS(
+      "http://arxiv.org/schemas/atom",
+      "comment"
+    )[0]
     const comment = commentEl?.textContent || undefined
 
     papers.push({
@@ -104,7 +122,9 @@ function parseArxivXML(xmlText: string): ArxivPaper[] {
 
 async function fetchArxivPapers(query: string): Promise<ArxivPaper[]> {
   const response = await fetch(
-    `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&start=0&max_results=300`,
+    `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(
+      query
+    )}&start=0&max_results=7`
   )
 
   if (!response.ok) {
@@ -132,9 +152,14 @@ async function synthesizePapers(paperIds: string[]): Promise<any> {
 }
 
 export function SearchInterface() {
+  const router = useRouter()
   const [query, setQuery] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedPapers, setSelectedPapers] = useState<string[]>([])
+  // Keep selected paper IDs in the URL via nuqs under key `sel`
+  const [selectedPapers, setSelectedPapers] = useQueryState(
+    "sel",
+    parseAsArrayOf(parseAsString).withDefault([])
+  )
 
   const {
     data: searchResults = [],
@@ -165,6 +190,11 @@ export function SearchInterface() {
     synthesize(selectedPapers)
   }
 
+  const handlePreview = () => {
+    if (selectedPapers.length === 0) return
+    router.push(`/preview?sel=${encodeURIComponent(selectedPapers.join(","))}`)
+  }
+
   const handleDemoScenario = (scenario: string) => {
     setQuery(scenario)
     setSearchQuery(scenario)
@@ -182,8 +212,8 @@ export function SearchInterface() {
               <Input
                 placeholder="Search ArXiv papers... (e.g., 'transformer architecture', 'quantum computing')"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
                 className="pl-10"
               />
             </div>
@@ -207,20 +237,39 @@ export function SearchInterface() {
           <PaperResults
             papers={searchResults}
             selectedPapers={selectedPapers}
-            onTogglePaper={(paperId) => {
-              setSelectedPapers((prev) =>
-                prev.includes(paperId) ? prev.filter((id) => id !== paperId) : [...prev, paperId],
+            onTogglePaper={paperId => {
+              setSelectedPapers(prev =>
+                prev.includes(paperId)
+                  ? prev.filter(id => id !== paperId)
+                  : [...prev, paperId]
               )
             }}
+            onSelectAll={() => setSelectedPapers(searchResults.map(p => p.id))}
+            onClearAll={() => setSelectedPapers([])}
           />
 
           {selectedPapers.length > 0 && (
-            <div className="flex justify-center">
-              <Button size="lg" onClick={handleSynthesize} disabled={isSynthesizing} className="gap-2">
+            <div className="flex justify-center gap-3">
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={handlePreview}
+                className="gap-2"
+              >
+                Preview {selectedPapers.length}
+              </Button>
+              <Button
+                size="lg"
+                onClick={handleSynthesize}
+                disabled={isSynthesizing}
+                className="gap-2"
+              >
                 <Sparkles className="w-4 h-4" />
                 {isSynthesizing
                   ? "Synthesizing..."
-                  : `Synthesize ${selectedPapers.length} Paper${selectedPapers.length > 1 ? "s" : ""}`}
+                  : `Synthesize ${selectedPapers.length} Paper${
+                      selectedPapers.length > 1 ? "s" : ""
+                    }`}
               </Button>
             </div>
           )}
