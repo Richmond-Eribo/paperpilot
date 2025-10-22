@@ -27,7 +27,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const client = new BedrockAgentCoreClient({ region })
+    const client = new BedrockAgentCoreClient({
+      region,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      },
+    })
     const payload = new TextEncoder().encode(`{ "prompt": "${prompt}" }`)
     // Ensure runtimeSessionId meets AgentCore min length (>= 33)
     const runtimeSessionId =
