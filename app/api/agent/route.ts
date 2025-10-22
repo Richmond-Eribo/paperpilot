@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     })
 
     const resp = await client.send(command)
-    console.log(resp)
+    // console.log(resp)
     const body: any = (resp as any).response
 
     const extractMarkdown = (raw: string): string => {

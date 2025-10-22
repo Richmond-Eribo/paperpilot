@@ -1,6 +1,6 @@
 "use client"
 
-import { Search } from "lucide-react"
+import { ArrowUp, Loader2, Paperclip, Plus } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -34,20 +34,36 @@ export function SearchHeader({
       }`}
     >
       <div className="space-y-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search ArXiv papers... (e.g., 'transformer architecture', 'quantum computing')"
-              value={query}
-              onChange={e => onQueryChange(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && onSearch()}
-              className="pl-10"
-            />
+        <div className="relative flex-1">
+          {/* Left icon */}
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Paperclip className="h-5 w-5" />
+          </span>
+          {/* Main input */}
+          <Input
+            placeholder="Ask a question…"
+            value={query}
+            onChange={e => onQueryChange(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && onSearch()}
+            className="h-14 rounded-xl pl-12 pr-40 text-base"
+          />
+          {/* Right-side inline actions */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              className="h-10 w-10 rounded-full"
+              onClick={onSearch}
+              disabled={isSearching}
+              aria-label="Submit query"
+            >
+              {isSearching ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ArrowUp className="h-5 w-5" />
+              )}
+            </Button>
           </div>
-          <Button onClick={onSearch} disabled={isSearching}>
-            {isSearching ? "Searching..." : "Search"}
-          </Button>
         </div>
 
         <DemoScenarios onSelectScenario={onSelectScenario} />

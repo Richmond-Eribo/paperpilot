@@ -33,8 +33,9 @@ export function SearchInterface() {
 
   const { selectedIds, togglePaper, selectAll, clearAll } = useSelectedPapers()
 
-  const handleSearch = async () => {
-    if (!query.trim()) return
+  const handleSearch = async (prompt?: string) => {
+    const finalPrompt = (prompt ?? query).trim()
+    if (!finalPrompt) return
     // Stop any ongoing stream
     abortRef.current?.abort()
     const ac = new AbortController()
@@ -47,7 +48,7 @@ export function SearchInterface() {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: query }),
+        body: JSON.stringify({ prompt: finalPrompt }),
         signal: ac.signal,
       })
 
@@ -86,7 +87,8 @@ export function SearchInterface() {
 
   const handleDemoScenario = (scenario: string) => {
     setQuery(scenario)
-    setSearchQuery(scenario)
+    // kick off the same request flow as pressing the Search button
+    handleSearch(scenario)
   }
 
   return (
@@ -128,7 +130,7 @@ export function SearchInterface() {
                 {agentText || (agentLoading ? "" : "")}
               </ReactMarkdown>
               {agentLoading && (
-                <div className="opacity-60 mt-2">Streaming…</div>
+                <div className="opacity-60 mt-2">Generating response…</div>
               )}
             </div>
           </Card>

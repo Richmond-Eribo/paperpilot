@@ -1,30 +1,35 @@
 "use client"
 
+import type { ComponentType } from "react"
 import { Button } from "@/components/ui/button"
-import { Lightbulb } from "lucide-react"
+import { Figma, Image, LayoutPanelTop, Upload, UserRound } from "lucide-react"
 
 interface DemoScenariosProps {
   onSelectScenario: (scenario: string) => void
 }
 
 export function DemoScenarios({ onSelectScenario }: DemoScenariosProps) {
-  const scenarios = ["transformer architecture", "quantum computing algorithms", "reinforcement learning applications"]
+  const scenarios: {
+    label: string
+  }[] = [
+    { label: "Machine Learning" },
+    { label: "Data Analysis" },
+    { label: "Cancer Research" },
+    { label: "Clinical Trials" },
+    { label: "AI Ethics" },
+  ]
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Lightbulb className="w-4 h-4" />
-        <span>Try:</span>
-      </div>
-      {scenarios.map((scenario) => (
+      {scenarios.map(({ label }) => (
         <Button
-          key={scenario}
+          key={label}
           variant="outline"
           size="sm"
-          onClick={() => onSelectScenario(scenario)}
-          className="text-xs"
+          onClick={() => onSelectScenario(label)}
+          className="text-xs rounded-full"
         >
-          {scenario}
+          {label}
         </Button>
       ))}
     </div>
