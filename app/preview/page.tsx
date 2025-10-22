@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useQueryState, parseAsArrayOf, parseAsString } from "nuqs"
 import {
   ResizableHandle,
@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ExternalLink } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { PdfViewerModal } from "@/components/pdf-viewer-modal"
 
 type SelectedPaper = {
   id: string
@@ -23,6 +24,11 @@ type SelectedPaper = {
 
 export default function PreviewPage() {
   const router = useRouter()
+  const [pdfModalOpen, setPdfModalOpen] = useState(false)
+  const [currentPdf, setCurrentPdf] = useState<{
+    url: string
+    title: string
+  } | null>(null)
 
   // URL state: selected IDs, optional metadata map, mode (preview|synth)
   const [selectedIds, setSelectedIds] = useQueryState(
@@ -118,13 +124,22 @@ export default function PreviewPage() {
                 No documents selected.
               </Card>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-2">
                 {papers.map(p => (
-                  <Card key={p.id} className="h-[60vh] overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2 border-b">
-                      <div className="text-sm font-medium truncate pr-2">
+                  <Card
+                    key={p.id}
+                    className="p-3 flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">
                         {p.title || p.id}
                       </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {p.authors?.join(", ")}
+                        {p.published ? ` • ${p.published}` : ""}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
                       {p.pdfLink && (
                         <Button variant="outline" size="sm" asChild>
                           <a
@@ -137,18 +152,21 @@ export default function PreviewPage() {
                           </a>
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (!p.pdfLink) return
+                          setCurrentPdf({
+                            url: p.pdfLink,
+                            title: p.title || p.id,
+                          })
+                          setPdfModalOpen(true)
+                        }}
+                        disabled={!p.pdfLink}
+                      >
+                        Preview
+                      </Button>
                     </div>
-                    {p.pdfLink ? (
-                      <iframe
-                        src={p.pdfLink}
-                        className="w-full h-full border-0"
-                        title={`PDF ${p.title || p.id}`}
-                      />
-                    ) : (
-                      <div className="p-6 text-sm text-muted-foreground">
-                        No PDF link available for this item.
-                      </div>
-                    )}
                   </Card>
                 ))}
               </div>
@@ -187,6 +205,16 @@ export default function PreviewPage() {
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* PDF Preview Modal */}
+      {currentPdf && (
+        <PdfViewerModal
+          isOpen={pdfModalOpen}
+          onClose={() => setPdfModalOpen(false)}
+          pdfUrl={currentPdf.url}
+          title={currentPdf.title}
+        />
+      )}
     </div>
   )
 }

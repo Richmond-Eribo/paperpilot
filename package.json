@@ -9,6 +9,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-agentcore": "^3.913.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.913.0",
+    "@aws-sdk/credential-providers": "^3.913.0",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
