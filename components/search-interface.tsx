@@ -3,14 +3,11 @@
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
-import { PaperResults } from "@/components/paper-results"
 import { SearchHeader } from "@/components/search/SearchHeader"
 import { FloatingActions } from "@/components/search/FloatingActions"
 import { fetchArxivPapers, type ArxivPaper } from "@/lib/arxiv"
 import { useSelectedPapers } from "@/hooks/useSelectedPapers"
-import { Card } from "@/components/ui/card"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
+import AgentResponse from "@/components/agent-response"
 
 export function SearchInterface() {
   const router = useRouter()
@@ -116,24 +113,11 @@ export function SearchInterface() {
 
         {/* Agent response panel */}
         {(agentLoading || agentText || agentError) && (
-          <Card className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">Agent response</h2>
-            </div>
-            {agentError ? (
-              <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                {agentError}
-              </div>
-            ) : null}
-            <div className="text-sm leading-relaxed">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {agentText || (agentLoading ? "" : "")}
-              </ReactMarkdown>
-              {agentLoading && (
-                <div className="opacity-60 mt-2">Generating response…</div>
-              )}
-            </div>
-          </Card>
+          <AgentResponse
+            markdown={agentText}
+            loading={agentLoading}
+            error={agentError}
+          />
         )}
       </div>
 
